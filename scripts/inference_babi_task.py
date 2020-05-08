@@ -83,13 +83,13 @@ print("train set length: {}".format(dl.sample_amount('train')))
 print("valid set length: {}".format(dl.sample_amount('valid')))
 print("model parameter amount: {}".format(model.parameter_amount))
 
-saver = tf.train.Saver()
-conf = tf.ConfigProto()
+saver = tf.compat.v1.train.Saver()
+conf = tf.compat.v1.ConfigProto()
 conf.gpu_options.per_process_gpu_memory_fraction = 0.8
 conf.gpu_options.allocator_type = 'BFC'
 conf.gpu_options.allow_growth = True
 
-with tf.Session(config=conf) as sess:
+with tf.compat.v1.Session(config=conf) as sess:
     saver.restore(sess, os.path.join(expt_dir, "model_dump.ckpt"))
     mean_error = []
     for task in task_list:

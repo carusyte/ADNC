@@ -84,7 +84,7 @@ class MWContentMemoryUnitCell(MWDNCMemoryUnitCell):
         read_vectors = tf.reshape(read_vectors, [self.h_B, self.h_W * self.h_RH])
 
         if self.bypass_dropout:
-            input_bypass = tf.nn.dropout(inputs, self.bypass_dropout)
+            input_bypass = tf.nn.dropout(inputs, 1 - (self.bypass_dropout))
         else:
             input_bypass = inputs
 
@@ -110,12 +110,12 @@ class MWContentMemoryUnitCell(MWDNCMemoryUnitCell):
         input_size = inputs.get_shape()[1].value
         total_signal_size = self.h_RH * (2 + self.h_W) + self.h_WH * (3 + 3 * self.h_W)
 
-        with tf.variable_scope('{}'.format(self.name), reuse=self.reuse):
-            w_x = tf.get_variable("mu_w_x", (input_size, total_signal_size),
-                                  initializer=tf.contrib.layers.xavier_initializer(seed=self.seed),
-                                  collections=['memory_unit', tf.GraphKeys.GLOBAL_VARIABLES], dtype=self.dtype)
-            b_x = tf.get_variable("mu_b_x", (total_signal_size,), initializer=tf.constant_initializer(0.),
-                                  collections=['memory_unit', tf.GraphKeys.GLOBAL_VARIABLES], dtype=self.dtype)
+        with tf.compat.v1.variable_scope('{}'.format(self.name), reuse=self.reuse):
+            w_x = tf.compat.v1.get_variable("mu_w_x", (input_size, total_signal_size),
+                                  initializer=tf.compat.v1.keras.initializers.VarianceScaling(scale=1.0, mode="fan_avg", distribution="uniform", seed=self.seed),
+                                  collections=['memory_unit', tf.compat.v1.GraphKeys.GLOBAL_VARIABLES], dtype=self.dtype)
+            b_x = tf.compat.v1.get_variable("mu_b_x", (total_signal_size,), initializer=tf.compat.v1.constant_initializer(0.),
+                                  collections=['memory_unit', tf.compat.v1.GraphKeys.GLOBAL_VARIABLES], dtype=self.dtype)
 
             weighted_input = tf.matmul(inputs, w_x) + b_x
             if self.dnc_norm:

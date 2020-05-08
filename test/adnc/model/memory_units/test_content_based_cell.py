@@ -40,9 +40,9 @@ def memory_config(request):
 
 @pytest.fixture()
 def session():
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         yield sess
-    tf.reset_default_graph()
+    tf.compat.v1.reset_default_graph()
 
 
 @pytest.fixture()
@@ -95,10 +95,10 @@ class TestContentBasedMemoryUnitCell():
         memory_unit, config = memory_config
 
         inputs = np.ones([config['batch_size'], config['input_size']])
-        tf_input = tf.placeholder(tf.float32, [config['batch_size'], config['input_size']], name='x')
+        tf_input = tf.compat.v1.placeholder(tf.float32, [config['batch_size'], config['input_size']], name='x')
 
         weight_inputs = memory_unit._weight_input(tf_input)
-        session.run(tf.global_variables_initializer())
+        session.run(tf.compat.v1.global_variables_initializer())
         np_weight_inputs = weight_inputs.eval(session=session, feed_dict={tf_input: inputs})
 
         total_signal_size = (config['memory_width'] * (3 + config["read_heads"]) + 2 * config['read_heads'] + 3)
@@ -309,7 +309,7 @@ class TestContentBasedMemoryUnitCell():
         memory_unit.zero_state(config['batch_size'])
         read_vectors, states = memory_unit(inputs, pre_states)
 
-        session.run(tf.global_variables_initializer())
+        session.run(tf.compat.v1.global_variables_initializer())
         read_vectors, states = session.run([read_vectors, states])
 
         # test const initialization

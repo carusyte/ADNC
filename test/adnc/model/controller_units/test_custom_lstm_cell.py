@@ -35,9 +35,9 @@ def lstm_config(request):
 
 @pytest.fixture()
 def session():
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         yield sess
-    tf.reset_default_graph()
+    tf.compat.v1.reset_default_graph()
 
 
 # random seed for RandomStateGenerator pytest -s
@@ -87,7 +87,7 @@ class TestCustomLSTM():
         cell_size = config['cell_size']
 
         output, cell_state = lstm._lstm_cell(inputs, pre_cell_state, cell_size, weights, bias)
-        session.run(tf.global_variables_initializer())
+        session.run(tf.compat.v1.global_variables_initializer())
         output, cell_state = session.run([output, cell_state])
 
         def sigmoid(x):
@@ -127,7 +127,7 @@ class TestCustomLSTM():
 
         output, cell_state = lstm._lstm_layer(inputs, pre_cell_state, 0)
 
-        session.run(tf.global_variables_initializer())
+        session.run(tf.compat.v1.global_variables_initializer())
         output, cell_state = session.run([output, cell_state])
 
         assert output.shape == (config['batch_size'], config['cell_size'])
@@ -150,7 +150,7 @@ class TestCustomLSTM():
         cell_size = config['cell_size']
 
         output, cell_state = lstm._lnlstm_cell(inputs, pre_cell_state, cell_size, weights, bias)
-        session.run(tf.global_variables_initializer())
+        session.run(tf.compat.v1.global_variables_initializer())
         output, cell_state = session.run([output, cell_state])
 
         def sigmoid(x):
@@ -191,12 +191,12 @@ class TestCustomLSTM():
         np_input = np_rng.normal(0, 2, [config['batch_size'], config['input_size']])
         np_pre_cell_state = np_rng.normal(0, 1, [config['batch_size'], config['cell_size']])
 
-        tf_input = tf.placeholder(tf.float32, [config['batch_size'], config['input_size']], name='x')
-        tf_pre_cell_state = tf.placeholder(tf.float32, [config['batch_size'], config['cell_size']], name='c')
+        tf_input = tf.compat.v1.placeholder(tf.float32, [config['batch_size'], config['input_size']], name='x')
+        tf_pre_cell_state = tf.compat.v1.placeholder(tf.float32, [config['batch_size'], config['cell_size']], name='c')
 
         output, cell_state = lstm._lnlstm_layer(tf_input, tf_pre_cell_state, 0)
 
-        session.run(tf.global_variables_initializer())
+        session.run(tf.compat.v1.global_variables_initializer())
         output, cell_state = session.run([output, cell_state],
                                          feed_dict={tf_input: np_input, tf_pre_cell_state: np_pre_cell_state})
 
@@ -218,7 +218,7 @@ class TestCustomLSTM():
         lstm.zero_state(config['batch_size'])
         output_tuple, state_tuple = lstm(input_tuple, pre_cell_state_tuple)
 
-        session.run(tf.global_variables_initializer())
+        session.run(tf.compat.v1.global_variables_initializer())
         outputs, states = session.run([output_tuple, state_tuple])
 
         assert outputs.shape == (config['batch_size'], config['cell_size'])

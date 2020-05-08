@@ -107,7 +107,7 @@ class MWDNCMemoryUnitCell(BaseMemoryUnitCell):
         read_vectors = tf.reshape(read_vectors, [self.h_B, self.h_W * self.h_RH])
 
         if self.bypass_dropout:
-            input_bypass = tf.nn.dropout(inputs, self.bypass_dropout)
+            input_bypass = tf.nn.dropout(inputs, 1 - (self.bypass_dropout))
         else:
             input_bypass = inputs
 
@@ -137,12 +137,12 @@ class MWDNCMemoryUnitCell(BaseMemoryUnitCell):
         input_size = inputs.get_shape()[1].value
         total_signal_size = self.h_RH * (3 + 2 * self.h_WH + self.h_W) + self.h_WH * (3 + 3 * self.h_W)
 
-        with tf.variable_scope('{}'.format(self.name), reuse=self.reuse):
-            w_x = tf.get_variable("mu_w_x", (input_size, total_signal_size),
-                                  initializer=tf.contrib.layers.xavier_initializer(seed=self.seed),
-                                  collections=['memory_unit', tf.GraphKeys.GLOBAL_VARIABLES], dtype=self.dtype)
-            b_x = tf.get_variable("mu_b_x", (total_signal_size,), initializer=tf.constant_initializer(0.),
-                                  collections=['memory_unit', tf.GraphKeys.GLOBAL_VARIABLES], dtype=self.dtype)
+        with tf.compat.v1.variable_scope('{}'.format(self.name), reuse=self.reuse):
+            w_x = tf.compat.v1.get_variable("mu_w_x", (input_size, total_signal_size),
+                                  initializer=tf.compat.v1.keras.initializers.VarianceScaling(scale=1.0, mode="fan_avg", distribution="uniform", seed=self.seed),
+                                  collections=['memory_unit', tf.compat.v1.GraphKeys.GLOBAL_VARIABLES], dtype=self.dtype)
+            b_x = tf.compat.v1.get_variable("mu_b_x", (total_signal_size,), initializer=tf.compat.v1.constant_initializer(0.),
+                                  collections=['memory_unit', tf.compat.v1.GraphKeys.GLOBAL_VARIABLES], dtype=self.dtype)
 
             weighted_input = tf.matmul(inputs, w_x) + b_x
             if self.dnc_norm:
@@ -196,11 +196,11 @@ class MWDNCMemoryUnitCell(BaseMemoryUnitCell):
                                         write_gates):
 
         # usage update after write from last time step
-        pre_write_weighting = 1 - tf.reduce_prod(1 - pre_write_weightings, [1], keepdims=False)
+        pre_write_weighting = 1 - tf.reduce_prod(input_tensor=1 - pre_write_weightings, axis=[1], keepdims=False)
         usage_vector = pre_usage_vector + pre_write_weighting - pre_usage_vector * pre_write_weighting
 
         # usage update after read
-        retention_vector = tf.reduce_prod(1 - free_gates * pre_read_weightings, axis=1, keepdims=False,
+        retention_vector = tf.reduce_prod(input_tensor=1 - free_gates * pre_read_weightings, axis=1, keepdims=False,
                                           name='retention_prod')
         usage_vector = usage_vector * retention_vector
 
@@ -211,7 +211,7 @@ class MWDNCMemoryUnitCell(BaseMemoryUnitCell):
             sorted_usage, free_list = tf.nn.top_k(-1 * usage_vector_cp, self.h_N)
             sorted_usage = -1 * sorted_usage
 
-            cumprod_sorted_usage = tf.cumprod(sorted_usage, axis=1, exclusive=True)
+            cumprod_sorted_usage = tf.math.cumprod(sorted_usage, axis=1, exclusive=True)
             corrected_free_list = free_list + self.const_batch_memory_range
 
             corrected_free_list_un = [tf.reshape(corrected_free_list, [-1, ]), ]
@@ -241,14 +241,14 @@ class MWDNCMemoryUnitCell(BaseMemoryUnitCell):
 
         write_w = tf.expand_dims(write_weighting, 3)
         erase_vector = tf.expand_dims(erase_vector, 2)
-        erase_matrix = tf.reduce_prod(1 - write_w * erase_vector, axis=1, keepdims=False)
+        erase_matrix = tf.reduce_prod(input_tensor=1 - write_w * erase_vector, axis=1, keepdims=False)
         write_matrix = tf.matmul(write_weighting, write_vector, adjoint_a=True)
 
         return pre_memory * erase_matrix + write_matrix
 
     def _update_link_matrix(self, pre_link_matrices, write_weightings, pre_precedence_weightings):
 
-        precedence_weightings = (1 - tf.reduce_sum(write_weightings, 2,
+        precedence_weightings = (1 - tf.reduce_sum(input_tensor=write_weightings, axis=2,
                                                    keepdims=True)) * pre_precedence_weightings + write_weightings
 
         add_mat = tf.expand_dims(write_weightings, axis=3) * tf.expand_dims(pre_precedence_weightings, axis=2)
@@ -267,12 +267,12 @@ class MWDNCMemoryUnitCell(BaseMemoryUnitCell):
         forward_weightings = tf.matmul(read_weightings_stacked, link_matrix)
         backward_weightings = tf.matmul(read_weightings_stacked, link_matrix, adjoint_b=True)
 
-        return tf.transpose(forward_weightings, (0, 2, 1, 3)), tf.transpose(backward_weightings, (0, 2, 1, 3))
+        return tf.transpose(a=forward_weightings, perm=(0, 2, 1, 3)), tf.transpose(a=backward_weightings, perm=(0, 2, 1, 3))
 
     def _make_read_weightings(self, forward_weightings, backward_weightings, read_content_weightings, read_modes):
 
-        read_weighting = tf.reduce_sum(tf.expand_dims(read_modes[:, :, :self.h_WH], 3) * backward_weightings, axis=2) + \
+        read_weighting = tf.reduce_sum(input_tensor=tf.expand_dims(read_modes[:, :, :self.h_WH], 3) * backward_weightings, axis=2) + \
                          tf.expand_dims(read_modes[:, :, self.h_WH], 2) * read_content_weightings + \
-                         tf.reduce_sum(tf.expand_dims(read_modes[:, :, self.h_WH + 1:], 3) * forward_weightings, axis=2)
+                         tf.reduce_sum(input_tensor=tf.expand_dims(read_modes[:, :, self.h_WH + 1:], 3) * forward_weightings, axis=2)
 
         return read_weighting

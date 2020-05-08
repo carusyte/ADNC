@@ -21,9 +21,9 @@ from adnc.model.utils import layer_norm
 
 @pytest.fixture()
 def session():
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         yield sess
-    tf.reset_default_graph()
+    tf.compat.v1.reset_default_graph()
 
 @pytest.fixture()
 def np_rng():
@@ -36,7 +36,7 @@ def test_layer_norm(session, np_rng):
     weights = tf.constant(np_weights, dtype=tf.float32)
     weights_ln = layer_norm(weights, 'test')
 
-    session.run(tf.global_variables_initializer())
+    session.run(tf.compat.v1.global_variables_initializer())
     weights_ln = session.run(weights_ln)
 
     assert weights_ln.shape == (64, 128)

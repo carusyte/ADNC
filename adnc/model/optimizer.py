@@ -30,14 +30,14 @@ class Optimizer:
         self.weight_decay = config["weight_decay"]
 
         if not isinstance(self.learn_rate, float):
-            self.learn_rate = tf.placeholder(tf.float32, shape=[])
+            self.learn_rate = tf.compat.v1.placeholder(tf.float32, shape=[])
 
         if self.weight_decay:
-            with tf.variable_scope('weight_decay') as scope:
-                weight_decay = tf.reduce_sum(self.weight_decay * tf.stack([tf.nn.l2_loss(var) for var in variables]))
+            with tf.compat.v1.variable_scope('weight_decay') as scope:
+                weight_decay = tf.reduce_sum(input_tensor=self.weight_decay * tf.stack([tf.nn.l2_loss(var) for var in variables]))
                 loss = loss + weight_decay
 
-        self.global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0),
+        self.global_step = tf.compat.v1.get_variable('global_step', [], initializer=tf.compat.v1.constant_initializer(0),
                                            trainable=False)
 
         self.optimizer = self.get_optimizer()
@@ -52,23 +52,23 @@ class Optimizer:
     def get_optimizer(self):
 
         if self.optimizer == 'adam':
-            optimizer = tf.train.AdamOptimizer(learning_rate=self.learn_rate, use_locking=self.use_locking,
+            optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=self.learn_rate, use_locking=self.use_locking,
                                                epsilon=0.000001)
         elif self.optimizer == 'rmsprop':
-            optimizer = tf.train.RMSPropOptimizer(learning_rate=self.learn_rate,
+            optimizer = tf.compat.v1.train.RMSPropOptimizer(learning_rate=self.learn_rate,
                                                   momentum=self.optimizer_config['momentum'],
                                                   use_locking=self.use_locking)
         elif self.optimizer == 'momentum':
-            optimizer = tf.train.MomentumOptimizer(learning_rate=self.learn_rate,
+            optimizer = tf.compat.v1.train.MomentumOptimizer(learning_rate=self.learn_rate,
                                                    momentum=self.optimizer_config['momentum'],
                                                    use_nesterov=self.optimizer_config['nesterov'],
                                                    use_locking=self.use_locking)
         elif self.optimizer == 'adadelta':
-            optimizer = tf.train.AdadeltaOptimizer(learning_rate=self.learn_rate, use_locking=self.use_locking)
+            optimizer = tf.compat.v1.train.AdadeltaOptimizer(learning_rate=self.learn_rate, use_locking=self.use_locking)
         elif self.optimizer == 'adagrad':
-            optimizer = tf.train.AdagradOptimizer(learning_rate=self.learn_rate, use_locking=self.use_locking)
+            optimizer = tf.compat.v1.train.AdagradOptimizer(learning_rate=self.learn_rate, use_locking=self.use_locking)
         elif self.optimizer == 'sgd':
-            optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learn_rate, use_locking=self.use_locking)
+            optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate=self.learn_rate, use_locking=self.use_locking)
         else:
             raise UserWarning("Unknown optimizer")
         return optimizer

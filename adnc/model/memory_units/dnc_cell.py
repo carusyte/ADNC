@@ -107,7 +107,7 @@ class DNCMemoryUnitCell(BaseMemoryUnitCell):
         read_vectors = tf.reshape(read_vectors, [self.h_B, self.h_W * self.h_RH])
 
         if self.bypass_dropout:
-            input_bypass = tf.nn.dropout(inputs, self.bypass_dropout)
+            input_bypass = tf.nn.dropout(inputs, 1 - (self.bypass_dropout))
         else:
             input_bypass = inputs
 
@@ -134,13 +134,13 @@ class DNCMemoryUnitCell(BaseMemoryUnitCell):
         input_size = inputs.get_shape()[1].value
         total_signal_size = (3 + self.h_RH) * self.h_W + 5 * self.h_RH + 3
 
-        with tf.variable_scope('{}'.format(self.name), reuse=self.reuse):
-            w_x = tf.get_variable("mu_w_x", (input_size, total_signal_size),
-                                  initializer=tf.contrib.layers.xavier_initializer(seed=self.seed),
-                                  collections=['memory_unit', tf.GraphKeys.GLOBAL_VARIABLES], dtype=self.dtype)
+        with tf.compat.v1.variable_scope('{}'.format(self.name), reuse=self.reuse):
+            w_x = tf.compat.v1.get_variable("mu_w_x", (input_size, total_signal_size),
+                                  initializer=tf.compat.v1.keras.initializers.VarianceScaling(scale=1.0, mode="fan_avg", distribution="uniform", seed=self.seed),
+                                  collections=['memory_unit', tf.compat.v1.GraphKeys.GLOBAL_VARIABLES], dtype=self.dtype)
 
-            b_x = tf.get_variable("mu_b_x", (total_signal_size,), initializer=tf.constant_initializer(0.),
-                                  collections=['memory_unit', tf.GraphKeys.GLOBAL_VARIABLES], dtype=self.dtype)
+            b_x = tf.compat.v1.get_variable("mu_b_x", (total_signal_size,), initializer=tf.compat.v1.constant_initializer(0.),
+                                  collections=['memory_unit', tf.compat.v1.GraphKeys.GLOBAL_VARIABLES], dtype=self.dtype)
 
             weighted_input = tf.matmul(inputs, w_x) + b_x
 
@@ -181,14 +181,14 @@ class DNCMemoryUnitCell(BaseMemoryUnitCell):
         read_strengths = oneplus(read_strengths)
         read_strengths = tf.expand_dims(read_strengths, axis=2)
         read_modes = tf.reshape(read_modes, [self.h_B, self.h_RH, 3])  # 3 read modes
-        read_modes = tf.nn.softmax(read_modes, dim=2)
+        read_modes = tf.nn.softmax(read_modes, axis=2)
 
         return alloc_gates, free_gates, write_gates, write_keys, write_strengths, write_vector, \
                erase_vector, read_keys, read_strengths, read_modes
 
     def _update_alloc_and_usage_vectors(self, pre_write_weightings, pre_read_weightings, pre_usage_vector, free_gates):
 
-        retention_vector = tf.reduce_prod(1 - free_gates * pre_read_weightings, axis=1, keepdims=False,
+        retention_vector = tf.reduce_prod(input_tensor=1 - free_gates * pre_read_weightings, axis=1, keepdims=False,
                                           name='retention_prod')
         usage_vector = (
                            pre_usage_vector + pre_write_weightings - pre_usage_vector * pre_write_weightings) * retention_vector
@@ -196,7 +196,7 @@ class DNCMemoryUnitCell(BaseMemoryUnitCell):
         sorted_usage, free_list = tf.nn.top_k(-1 * usage_vector, self.h_N)
         sorted_usage = -1 * sorted_usage
 
-        cumprod_sorted_usage = tf.cumprod(sorted_usage, axis=1, exclusive=True)
+        cumprod_sorted_usage = tf.math.cumprod(sorted_usage, axis=1, exclusive=True)
         corrected_free_list = free_list + self.const_batch_memory_range
 
         cumprod_sorted_usage_re = [tf.reshape(cumprod_sorted_usage, [-1, ]), ]
@@ -226,7 +226,7 @@ class DNCMemoryUnitCell(BaseMemoryUnitCell):
 
     def _update_link_matrix(self, pre_link_matrix, write_weighting, pre_precedence_weighting):
 
-        precedence_weighting = (1 - tf.reduce_sum(write_weighting, 1,
+        precedence_weighting = (1 - tf.reduce_sum(input_tensor=write_weighting, axis=1,
                                                   keepdims=True)) * pre_precedence_weighting + write_weighting
 
         add_mat = tf.matmul(tf.expand_dims(write_weighting, axis=2),

@@ -21,9 +21,9 @@ from adnc.model.utils import unit_simplex_initialization
 
 @pytest.fixture()
 def session():
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         yield sess
-    tf.reset_default_graph()
+    tf.compat.v1.reset_default_graph()
 
 
 @pytest.fixture()

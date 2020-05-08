@@ -42,12 +42,12 @@ class WordEmbedding():
         self.embeddings = tf.Variable(init_tensor, dtype=dtype, name='word_embedding')
 
     def embed(self, word_idx):
-        embed = tf.nn.embedding_lookup(self.embeddings, word_idx, name='embedding_lookup')
+        embed = tf.nn.embedding_lookup(params=self.embeddings, ids=word_idx, name='embedding_lookup')
         return embed
 
     @staticmethod
     def initialize_random(vocabulary_size, embedding_size, dtype):
-        return tf.random_uniform([vocabulary_size, embedding_size], -1.0, 1.0, dtype=dtype)
+        return tf.random.uniform([vocabulary_size, embedding_size], -1.0, 1.0, dtype=dtype)
 
     def initialize_with_glove(self, word_idx_dict, embedding_size, tmp_dir, dtype):
 

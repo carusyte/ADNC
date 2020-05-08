@@ -32,7 +32,7 @@ This script performs starts a training run on the bAbI task. The training can be
 file. To restore a session use the --sess and --check flag.
 """
 
-tf.reset_default_graph()
+tf.compat.v1.reset_default_graph()
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--sess', type=int, default=False, help='session number')
@@ -81,13 +81,13 @@ trainer = Optimizer(sp.config('training'), model.loss,
                     model.trainable_variables)  # initilizes a trainer class with the optimizer
 optimizer = trainer.optimizer  # the optimizer for training, similar to TF
 
-init_op = tf.global_variables_initializer()
-saver = tf.train.Saver(max_to_keep=30)
+init_op = tf.compat.v1.global_variables_initializer()
+saver = tf.compat.v1.train.Saver(max_to_keep=30)
 
-summary_train_loss = tf.summary.scalar("train_loss", model.loss)
-summary_valid_loss = tf.summary.scalar("valid_loss", model.loss)
-lstm_scale = tf.summary.scalar("lstm_scale", tf.reduce_mean(model.trainable_variables[2]))
-lstm_beta = tf.summary.scalar("lstm_beta", tf.reduce_mean(model.trainable_variables[3]))
+summary_train_loss = tf.compat.v1.summary.scalar("train_loss", model.loss)
+summary_valid_loss = tf.compat.v1.summary.scalar("valid_loss", model.loss)
+lstm_scale = tf.compat.v1.summary.scalar("lstm_scale", tf.reduce_mean(input_tensor=model.trainable_variables[2]))
+lstm_beta = tf.compat.v1.summary.scalar("lstm_beta", tf.reduce_mean(input_tensor=model.trainable_variables[3]))
 
 sp.pub("vocabulary size: {}".format(dl.vocabulary_size))  # prints values and logs it to a log file
 sp.pub("train set length: {}".format(dl.sample_amount('train')))
@@ -96,13 +96,13 @@ sp.pub("valid set length: {}".format(dl.sample_amount('valid')))
 sp.pub("valid batch amount: {}".format(dl.batch_amount('valid')))
 sp.pub("model parameter amount: {}".format(model.parameter_amount))
 
-conf = tf.ConfigProto()  # TF session config for optimal GPU usage
+conf = tf.compat.v1.ConfigProto()  # TF session config for optimal GPU usage
 conf.gpu_options.per_process_gpu_memory_fraction = 0.8
 conf.gpu_options.allocator_type = 'BFC'
 conf.gpu_options.allow_growth = True
 conf.allow_soft_placement = True
 
-with tf.Session(config=conf) as sess:
+with tf.compat.v1.Session(config=conf) as sess:
     if sp.restore and restore_checkpoint:  # restores model dumps after a crash or to continiue training
         saver.restore(sess, os.path.join(sp.session_dir, "model_dump_{}.ckpt".format(restore_checkpoint)))
         epoch_start = restore_checkpoint + 1
@@ -121,7 +121,7 @@ with tf.Session(config=conf) as sess:
         epoch_start = 0
         sp.pub("start new training")
 
-    writer = tf.summary.FileWriter(os.path.join(sp.session_dir, "summary"), sess.graph)
+    writer = tf.compat.v1.summary.FileWriter(os.path.join(sp.session_dir, "summary"), sess.graph)
 
     for e in range(epoch_start, sp.config('training')['epochs']):  # loop over all training epochs
 
@@ -201,12 +201,12 @@ with tf.Session(config=conf) as sess:
                 controller_inf = np.mean(controller_inf)
                 memory_inf = np.mean(memory_inf)
 
-                writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag='wer', simple_value=word_error_rate)]),
+                writer.add_summary(tf.compat.v1.Summary(value=[tf.compat.v1.Summary.Value(tag='wer', simple_value=word_error_rate)]),
                                    e * dl.batch_amount('train') + step)
                 writer.add_summary(
-                    tf.Summary(value=[tf.Summary.Value(tag='controller_inf', simple_value=controller_inf)]),
+                    tf.compat.v1.Summary(value=[tf.compat.v1.Summary.Value(tag='controller_inf', simple_value=controller_inf)]),
                     e * dl.batch_amount('train') + step)
-                writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag='memory_inf', simple_value=memory_inf)]),
+                writer.add_summary(tf.compat.v1.Summary(value=[tf.compat.v1.Summary.Value(tag='memory_inf', simple_value=memory_inf)]),
                                    e * dl.batch_amount('train') + step)
 
                 sp.pub(

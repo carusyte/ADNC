@@ -23,7 +23,7 @@ from adnc.data import DataLoader
 from adnc.model import MANN, Optimizer
 from adnc.analysis import Bucket, PlotFunctionality
 
-tf.reset_default_graph()
+tf.compat.v1.reset_default_graph()
 
 """
 This script plot the memory unit functionality with the given models of this repository on the bAbI task 1 or on 1-20. 
@@ -82,13 +82,13 @@ model = MANN(model_config, analyse=True)
 data, target, mask = model.feed
 
 trainer = Optimizer(trainer_config, model.loss, model.trainable_variables)
-saver = tf.train.Saver()
+saver = tf.compat.v1.train.Saver()
 
 
-conf = tf.ConfigProto()
+conf = tf.compat.v1.ConfigProto()
 conf.gpu_options.allocator_type = 'BFC'
 conf.gpu_options.allow_growth = True
-with tf.Session(config=conf) as sess:
+with tf.compat.v1.Session(config=conf) as sess:
 
     saver.restore(sess, os.path.join(model_dir, "model_dump.ckpt"))
 

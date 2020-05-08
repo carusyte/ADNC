@@ -13,33 +13,42 @@
 # limitations under the License.
 # ==============================================================================
 import tensorflow as tf
-from tensorflow.contrib.rnn import LayerNormBasicLSTMCell, LSTMCell, LSTMBlockCell
+# from tensorflow.contrib.rnn import LayerNormBasicLSTMCell, LSTMCell, LSTMBlockCell
+import tensorflow_addons as tfa
 
 from adnc.model.controller_units.custom_lstm_cell import CustomLSTMCell
 from adnc.model.utils import get_activation
-
 """
 A wrapper for the controller units.
 """
 
-def get_rnn_cell_list(config, name, reuse=False, seed=123, dtype=tf.float32):
+
+def get_rnn_cell_list(config, name, seed=123, dtype=tf.float32):
     cell_list = []
     for i, units in enumerate(config['num_units']):
         cell = None
         if config['cell_type'] == 'clstm':
-            cell = CustomLSTMCell(units, layer_norm=config['layer_norm'], activation=config['activation'], seed=seed,
-                                  reuse=reuse, dtype=dtype, name='{}_{}'.format(name, i))
+            cell = CustomLSTMCell(units,
+                                  layer_norm=config['layer_norm'],
+                                  activation=config['activation'],
+                                  seed=seed,
+                                  dtype=dtype,
+                                  name='{}_{}'.format(name, i))
         elif config['cell_type'] == 'tflstm':
 
             act = get_activation(config['activation'])
 
             if config['layer_norm']:
-                cell = LayerNormBasicLSTMCell(num_units=units, activation=act, layer_norm=config['layer_norm'],
-                                              reuse=reuse)
-            elif config['layer_norm'] == False and config['activation'] != 'tanh':
-                cell = LSTMCell(num_units=units, activation=act, reuse=reuse)
+                cell = tfa.rnn.LayerNormLSTMCell(
+                    units=units,
+                    activation=act,
+                    layer_norm=config['layer_norm'])
+            elif config[
+                    'layer_norm'] == False and config['activation'] != 'tanh':
+                cell = tf.keras.layers.LSTMCell(units=units, activation=act)
             else:
-                cell = LSTMBlockCell(num_units=units)
+                # cell = LSTMBlockCell(num_units=units)
+                raise UserWarning("no corresponding LSTM cell in TF2 API")
         cell_list.append(cell)
 
     return cell_list

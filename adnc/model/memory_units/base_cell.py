@@ -61,7 +61,7 @@ class BaseMemoryUnitCell():
 
     @property
     def trainable_variables(self):
-        return tf.get_collection('memory_unit')
+        return tf.compat.v1.get_collection('memory_unit')
 
     @property
     def parameter_amount(self):
@@ -80,8 +80,8 @@ class BaseMemoryUnitCell():
 
         similarity_numerator = tf.matmul(keys, memory, adjoint_b=True)
 
-        norm_memory = tf.sqrt(tf.reduce_sum(tf.square(memory), axis=2, keepdims=True))
-        norm_keys = tf.sqrt(tf.reduce_sum(tf.square(keys), axis=2, keepdims=True))
+        norm_memory = tf.sqrt(tf.reduce_sum(input_tensor=tf.square(memory), axis=2, keepdims=True))
+        norm_keys = tf.sqrt(tf.reduce_sum(input_tensor=tf.square(keys), axis=2, keepdims=True))
         similarity_denominator = tf.matmul(norm_keys, norm_memory, adjoint_b=True)
 
         similarity = similarity_numerator / similarity_denominator

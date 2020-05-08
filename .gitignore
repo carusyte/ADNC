@@ -107,3 +107,5 @@ data_tmp/
 
 # pycharm
 .idea/
+report.txt
+.vscode/settings.json

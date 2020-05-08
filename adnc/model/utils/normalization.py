@@ -15,16 +15,20 @@
 import tensorflow as tf
 
 
-def layer_norm(weights, name, dtype=tf.float32, reuse=False, collection='ADNC'):
+def layer_norm(weights, name, dtype=tf.float32):
     _eps = 1e-6
 
-    with tf.variable_scope("ln_{}".format(name), reuse=reuse):
-        scale = tf.get_variable('scale', shape=[weights.get_shape()[1]], initializer=tf.constant_initializer(1.),
-                                collections=[collection, tf.GraphKeys.GLOBAL_VARIABLES], dtype=dtype)
-        beta = tf.get_variable('beta', shape=[weights.get_shape()[1]], initializer=tf.constant_initializer(0.),
-                               collections=[collection, tf.GraphKeys.GLOBAL_VARIABLES], dtype=dtype)
+    with tf.name_scope("ln_{}".format(name)):
+        scale = tf.Variable(
+            name='scale',
+            initializer=tf.ones(shape=[weights.get_shape()[1]]),
+            dtype=dtype)
+        beta = tf.Variable(name='beta',
+                           initializer=tf.zeros(shape=[weights.get_shape()[1]
+                                                       ], ),
+                           dtype=dtype)
 
-    mean, var = tf.nn.moments(weights, axes=[1], keep_dims=True)
+    mean, var = tf.nn.moments(x=weights, axes=[1], keepdims=True)
     norm_weights = (weights - mean) / tf.sqrt(var + _eps)
 
     return norm_weights * scale + beta

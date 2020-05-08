@@ -41,15 +41,15 @@ CONFIG = {
 
 @pytest.fixture()
 def mann():
-    tf.reset_default_graph()
+    tf.compat.v1.reset_default_graph()
     return MANN(config=CONFIG)
 
 
 @pytest.fixture()
 def session():
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         yield sess
-    tf.reset_default_graph()
+    tf.compat.v1.reset_default_graph()
 
 
 @pytest.fixture()
@@ -128,7 +128,7 @@ class TestMANN():
         np_mask = np.ones([12, BATCH_SIZE])
 
         data, target, mask = mann.feed
-        session.run(tf.global_variables_initializer())
+        session.run(tf.compat.v1.global_variables_initializer())
 
         prediction, loss = session.run([mann.prediction, mann.loss],
                                        feed_dict={data: np_inputs, target: np_target, mask: np_mask})

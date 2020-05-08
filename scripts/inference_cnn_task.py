@@ -66,25 +66,25 @@ print("x size: {}".format(dl.y_size))
 
 # calculate error
 data = model._data
-answer_idx = tf.placeholder(tf.int64, [data_set_config['batch_size']], name='labels')
-candidates_mask = tf.placeholder(tf.float32, [data_set_config['batch_size'], dl.y_size], name='candidates')
+answer_idx = tf.compat.v1.placeholder(tf.int64, [data_set_config['batch_size']], name='labels')
+candidates_mask = tf.compat.v1.placeholder(tf.float32, [data_set_config['batch_size'], dl.y_size], name='candidates')
 outputs = model.outputs
 last_output = outputs[-1, :, :]
 masked_output = candidates_mask * last_output
-predictions = tf.nn.softmax(masked_output, dim=-1)
-arg_predictions = tf.arg_max(predictions, dimension=-1)
+predictions = tf.nn.softmax(masked_output, axis=-1)
+arg_predictions = tf.argmax(predictions, axis=-1)
 equal = tf.cast(tf.equal(arg_predictions, answer_idx), tf.float32)
-error_rate = tf.reduce_mean(equal)
+error_rate = tf.reduce_mean(input_tensor=equal)
 
 # init saver
-saver = tf.train.Saver()
+saver = tf.compat.v1.train.Saver()
 
 # init session
-conf = tf.ConfigProto()
+conf = tf.compat.v1.ConfigProto()
 conf.gpu_options.allocator_type = 'BFC'
 conf.gpu_options.allow_growth = True
 
-with tf.Session(config=conf) as sess:
+with tf.compat.v1.Session(config=conf) as sess:
     saver.restore(sess, os.path.join(expt_dir, "model_dump.ckpt"))
 
     # calculate validation error

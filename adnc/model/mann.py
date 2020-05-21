@@ -14,6 +14,8 @@
 # ==============================================================================
 import numpy as np
 import tensorflow as tf
+
+from tensorflow import keras
 # from tensorflow.contrib.rnn import MultiRNNCell
 # from tensorflow.python.ops import variable_scope as vs
 
@@ -22,6 +24,8 @@ from adnc.model.memory_units.memory_unit import get_memory_unit
 
 from adnc.model.utils import HolisticMultiRNNCell
 from adnc.model.utils import WordEmbedding
+from time import strftime
+
 """
 The memory augmented neural network (MANN) model object contains the controller and the memory unit as well as the
 loss function and connects everything.
@@ -252,7 +256,7 @@ class MANN():
                                       'memory_unit',
                                       analyse=analyse,
                                       reuse=reuse)
-            cell = tf.keras.layers.StackedRNNCells(controller_list + [mu_cell])
+            cell = keras.layers.StackedRNNCells(controller_list + [mu_cell])
         else:
             controller_cell = HolisticMultiRNNCell(controller_list)
             memory_input_size = controller_cell.output_size
@@ -261,7 +265,7 @@ class MANN():
                                       'memory_unit',
                                       analyse=analyse,
                                       reuse=reuse)
-            cell = tf.keras.layers.StackedRNNCells([controller_cell, mu_cell])
+            cell = keras.layers.StackedRNNCells([controller_cell, mu_cell])
 
         batch_size = inputs.get_shape()[1].value
         cell_init_states = cell.zero_state(batch_size, dtype=self.dtype)
@@ -320,8 +324,8 @@ class MANN():
                                         seed=self.seed,
                                         dtype=self.dtype)
         if controller_config['connect'] == 'sparse':
-            cell_fw = tf.keras.layers.StackedRNNCells(list_fw)
-            cell_bw = tf.keras.layers.StackedRNNCells(list_bw)
+            cell_fw = keras.layers.StackedRNNCells(list_fw)
+            cell_bw = keras.layers.StackedRNNCells(list_bw)
         else:
             cell_fw = HolisticMultiRNNCell(list_fw)
             cell_bw = HolisticMultiRNNCell(list_bw)
@@ -434,3 +438,4 @@ class MANN():
     def parameter_amount(self):
         var_list = tf.compat.v1.trainable_variables()
         return self.count_parameter_amount(var_list)
+

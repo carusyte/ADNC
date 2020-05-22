@@ -144,7 +144,7 @@ class CustomLSTMCell(tf.keras.layers.Layer):
 
         cell_state = pre_cell_state
 
-        input_size = inputs.get_shape()[1].value
+        input_size = inputs.get_shape()[1]
 
         print(pre_cell_state)
 

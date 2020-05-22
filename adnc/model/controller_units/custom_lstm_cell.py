@@ -37,7 +37,6 @@ class CustomLSTMCell(tf.keras.layers.Layer):
 
         self.rng = np.random.RandomState(seed=seed)
         self.seed = seed
-        self.reuse = reuse
         self.name = name
         self.dtype = dtype
 

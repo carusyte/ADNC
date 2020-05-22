@@ -97,13 +97,13 @@ class CustomLSTMCell(tf.keras.layers.Layer):
         if inputs_shape.__len__() != 2:
             raise UserWarning(
                 "invalid shape: inputs at _lstm_layer {}".format(name))
-        input_size = inputs_shape[1].value
+        input_size = inputs_shape[1]
 
         cell_shape = pre_cell_state.get_shape()
         if cell_shape.__len__() != 2:
             raise UserWarning(
                 "invalid shape: cell_shape at _lstm_layer {}".format(name))
-        cell_size = cell_shape[1].value
+        cell_size = cell_shape[1]
 
         with tf.name_scope("cell_{}".format(name)):
             w_ifco = tf.Variable(
@@ -148,7 +148,7 @@ class CustomLSTMCell(tf.keras.layers.Layer):
         print(pre_cell_state)
 
         cell_shape = cell_state[0].get_shape()
-        cell_size = cell_shape[1].value
+        cell_size = cell_shape[1]
 
         w_ifco = self.add_weight(
             name="w_ifco_{}".format(name),

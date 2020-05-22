@@ -20,13 +20,12 @@ import tensorflow as tf
 The basis DNC memory unit class, all other inherit from this.
 """
 
-class BaseMemoryUnitCell():
+class BaseMemoryUnitCell(tf.keras.layers.Layer):
     def __init__(self, input_size, memory_length, memory_width, read_heads, bypass_dropout=False, dnc_norm=False,
-                 seed=100, reuse=False, analyse=False, dtype=tf.float32, name='base'):
-
+                 seed=100, reuse=False, analyse=False, **kwargs):
+        super(BaseMemoryUnitCell, self).__init__(*kwargs)
         self.rng = np.random.RandomState(seed=seed)
         self.seed = seed
-        self.dtype = dtype
         self.analyse = analyse
 
         # dnc parameters
@@ -40,7 +39,6 @@ class BaseMemoryUnitCell():
         self.bypass_dropout = bypass_dropout
 
         self.reuse = reuse
-        self.name = name
 
         self.const_memory_ones = None # will be defined with use of batch size in call method
         self.const_batch_memory_range = None # will be defined with use of batch size in call method
@@ -96,3 +94,14 @@ class BaseMemoryUnitCell():
     def _read_memory(memory, read_weightings):
         read_vectors = tf.matmul(read_weightings, memory)
         return read_vectors
+
+    def get_config(self):
+        return {
+            "seed": self.seed,
+            "input_size": self.input_size,
+            "memory_length": self.h_N,
+            "memory_width": self.h_W,
+            "read_heads": self.h_RH,
+            "dnc_norm": self.dnc_norm,
+            "bypass_dropout": self.bypass_dropout
+        }

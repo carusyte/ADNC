@@ -106,17 +106,18 @@ class CustomLSTMCell(tf.keras.layers.Layer):
         cell_size = cell_shape[1]
 
         with tf.name_scope("cell_{}".format(name)):
-            w_ifco = tf.Variable(
+            w_ifco = self.add_weight(
                 name="w_ifco_{}".format(name),
+                shape=(input_size, 4 * cell_size),
                 initializer=tf.keras.initializers.VarianceScaling(
                     scale=1.0,
                     mode="fan_avg",
                     distribution="uniform",
-                    seed=self.seed)(shape=(input_size, 4 * cell_size),
-                                    dtype=self.dtype),
+                    seed=self.seed),
             )
-            b_ifco = tf.Variable(name="b_ifco_{}".format(name),
-                                 initializer=tf.zeros(shape=(4 * cell_size, )),
+            b_ifco = self.add_weight(name="b_ifco_{}".format(name),
+                                 shape=(4 * cell_size, ),
+                                 initializer=tf.zeros_initializer(),
                                  dtype=self.dtype)
 
             output, cell_state = self._lstm_cell(inputs, pre_cell_state,

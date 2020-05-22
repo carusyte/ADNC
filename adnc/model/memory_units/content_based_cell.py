@@ -23,6 +23,9 @@ The content-based memory unit.
 
 class ContentBasedMemoryUnitCell(DNCMemoryUnitCell):
 
+    def __init__(self, *args, **kwargs):
+        super(ContentBasedMemoryUnitCell, self).__init__(*args, **kwargs)
+
     @property
     def state_size(self):
         init_memory = tf.TensorShape([self.h_N, self.h_W])
@@ -60,7 +63,7 @@ class ContentBasedMemoryUnitCell(DNCMemoryUnitCell):
 
     def _weight_input(self, inputs):
 
-        input_size = inputs.get_shape()[1].value
+        input_size = inputs.get_shape()[1]
         total_signal_size = (3 + self.h_RH) * self.h_W + 2 * self.h_RH + 3
 
         with tf.compat.v1.variable_scope('{}'.format(self.name), reuse=self.reuse):
@@ -78,14 +81,13 @@ class ContentBasedMemoryUnitCell(DNCMemoryUnitCell):
 
         return weighted_input
 
-    def __call__(self, inputs, pre_states, scope=None):
-
-        self.h_B = inputs.get_shape()[0].value
-
+    def build(self, input_shapes):
+        self.h_B = input_shapes[0]
         memory_ones, batch_memory_range = self._create_constant_value_tensors(self.h_B, self.dtype)
         self.const_memory_ones = memory_ones
         self.const_batch_memory_range = batch_memory_range
 
+    def call(self, inputs, pre_states):
         pre_memory, pre_usage_vector, pre_write_weightings, pre_read_weightings = pre_states
 
         weighted_input = self._weight_input(inputs)

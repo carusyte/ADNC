@@ -24,10 +24,10 @@ The vanilla DNC memory unit.
 
 class DNCMemoryUnitCell(BaseMemoryUnitCell):
     def __init__(self, input_size, memory_length, memory_width, read_heads, bypass_dropout=False, dnc_norm=False,
-                 seed=100, reuse=False, analyse=False, dtype=tf.float32, name='dnc_mu'):
+                 seed=100, reuse=False, analyse=False, **kwargs):
 
-        super().__init__(input_size, memory_length, memory_width, read_heads, bypass_dropout, dnc_norm, seed, reuse,
-                         analyse, dtype, name)
+        super(DNCMemoryUnitCell, self).__init__(input_size, memory_length, memory_width, read_heads, bypass_dropout, dnc_norm, seed, reuse,
+                         analyse, **kwargs)
 
 
     @property
@@ -72,16 +72,15 @@ class DNCMemoryUnitCell(BaseMemoryUnitCell):
                          erase_vector, read_keys, read_strengths, read_modes
 
         return analyse_states
-
-    def __call__(self, inputs, pre_states, scope=None):
-
-        self.h_B = inputs.get_shape()[0].value
-
+    
+    def build(self, input_shapes):
+        self.h_B = input_shapes[0]
         link_matrix_inv_eye, memory_ones, batch_memory_range = self._create_constant_value_tensors(self.h_B, self.dtype)
         self.const_link_matrix_inv_eye = link_matrix_inv_eye
         self.const_memory_ones = memory_ones
         self.const_batch_memory_range = batch_memory_range
 
+    def call(self, inputs, pre_states):
         pre_memory, pre_usage_vector, pre_write_weightings, pre_precedence_weighting, pre_link_matrix, pre_read_weightings = pre_states
 
         weighted_input = self._weight_input(inputs)
@@ -131,7 +130,7 @@ class DNCMemoryUnitCell(BaseMemoryUnitCell):
 
     def _weight_input(self, inputs):
 
-        input_size = inputs.get_shape()[1].value
+        input_size = inputs.get_shape()[1]
         total_signal_size = (3 + self.h_RH) * self.h_W + 5 * self.h_RH + 3
 
         with tf.compat.v1.variable_scope('{}'.format(self.name), reuse=self.reuse):

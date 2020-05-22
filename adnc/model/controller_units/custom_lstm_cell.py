@@ -27,9 +27,6 @@ class CustomLSTMCell(tf.keras.layers.Layer):
                  layer_norm=False,
                  activation='tanh',
                  seed=100,
-                 trainable=True,
-                 dtype=None,
-                 name='lstm',
                  **kwargs):
 
         self.num_units = num_units
@@ -37,8 +34,6 @@ class CustomLSTMCell(tf.keras.layers.Layer):
 
         self.rng = np.random.RandomState(seed=seed)
         self.seed = seed
-        self.name = name
-        self.dtype = dtype
 
         self._forget_bias = -1.0
 

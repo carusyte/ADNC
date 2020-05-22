@@ -61,10 +61,9 @@ class CustomLSTMCell(tf.keras.layers.Layer):
             self.lstm_layer = self._lstm_layer
 
     def call(self, inputs, cell_state):
-        with tf.name_scope("{}".format(self.name)):
-            outputs, cell_states = self.lstm_layer(inputs,
-                                                   cell_state,
-                                                   name="{}".format(self.name))
+        outputs, cell_states = self.lstm_layer(inputs,
+                                                cell_state,
+                                                name="{}".format(self.name))
         return outputs, cell_states
 
     def get_config(self):
@@ -148,24 +147,23 @@ class CustomLSTMCell(tf.keras.layers.Layer):
 
         print(pre_cell_state)
 
-        cell_shape = cell_state.get_shape()
+        cell_shape = cell_state[0].get_shape()
         cell_size = cell_shape[1].value
 
-        with tf.name_scope("{}".format(name)):
-            w_ifco = tf.Variable(
-                name="w_ifco_{}".format(name),
-                initial_value=tf.keras.initializers.VarianceScaling(
-                    scale=1.0,
-                    mode='fan_avg',
-                    distribution='uniform',
-                    seed=self.seed)(shape=(input_size, 4 * cell_size),
-                                    dtype=self.dtype))
+        w_ifco = self.add_weight(
+            name="w_ifco_{}".format(name),
+            initial_value=tf.keras.initializers.VarianceScaling(
+                scale=1.0,
+                mode='fan_avg',
+                distribution='uniform',
+                seed=self.seed)(shape=(input_size, 4 * cell_size),
+                                dtype=self.dtype))
 
-            b_ifco = tf.Variable(name="b_ifco_ln_{}".format(name),
-                                 initial_value=tf.zeros(shape=(4 * cell_size),
-                                                        dtype=self.dtype))
+        b_ifco = self.add_weight(name="b_ifco_ln_{}".format(name),
+                                initial_value=tf.zeros(shape=(4 * cell_size),
+                                                    dtype=self.dtype))
 
-            output, cell_state = self._lnlstm_cell(inputs, cell_state,
-                                                   cell_size, w_ifco, b_ifco)
+        output, cell_state = self._lnlstm_cell(inputs, cell_state,
+                                                cell_size, w_ifco, b_ifco)
 
         return output, cell_state

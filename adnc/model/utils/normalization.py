@@ -16,18 +16,22 @@ import tensorflow as tf
 
 
 def layer_norm(weights, name, dtype=tf.float32):
+
     _eps = 1e-6
     print("layer norm weights: {}".format(weights))
+    orig_shape = weights.get_shape()
+    weights = tf.squeeze(weights)
     with tf.name_scope("ln_{}".format(name)):
         scale = tf.Variable(
             name='scale',
-            initial_value=lambda : tf.ones(shape=[weights.get_shape()[1]]),
+            initial_value=lambda : tf.ones(shape=[weights.get_shape()[-1]]),
             dtype=dtype)
         beta = tf.Variable(name='beta',
-                           initial_value=lambda : tf.zeros(shape=[weights.get_shape()[1]]),
+                           initial_value=lambda : tf.zeros(shape=[weights.get_shape()[-1]]),
                            dtype=dtype)
 
     mean, var = tf.nn.moments(x=weights, axes=[1], keepdims=True)
     norm_weights = (weights - mean) / tf.sqrt(var + _eps)
+    ln = norm_weights * scale + beta
 
-    return norm_weights * scale + beta
+    return tf.reshape(ln, orig_shape)

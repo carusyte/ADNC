@@ -15,7 +15,7 @@
 import numpy as np
 import tensorflow as tf
 
-from adnc.model.utils import layer_norm, get_activation
+from adnc.model.utils import layer_norm, get_activation, LayerNorm
 """
 A implementation of the LSTM unit, it performs a bit faster as the TF implementation and implements layer norm.
 """
@@ -127,16 +127,14 @@ class CustomLSTMCell(tf.keras.layers.Layer):
 
     def _lnlstm_cell(self, inputs, pre_cell_state, cell_size, w_ifco, b_ifco):
 
-        ifco = layer_norm(tf.matmul(inputs, w_ifco),
-                          name="w_ifco",
-                          dtype=self.dtype) + b_ifco
+        ifco = LayerNorm(name="w_ifco",dtype=self.dtype)(tf.matmul(inputs, w_ifco)) + b_ifco
         gates = tf.sigmoid(ifco[:, 0 * cell_size:3 * cell_size])
         cell_state = tf.add(
             tf.multiply(gates[:, 0:cell_size], pre_cell_state),
             tf.multiply(gates[:, cell_size:2 * cell_size],
                         self.act(ifco[:, 3 * cell_size:4 * cell_size])))
         output = gates[:, 2 * cell_size:3 * cell_size] * self.act(
-            layer_norm(cell_state, name="out_act", dtype=self.dtype))
+            LayerNorm(name="out_act", dtype=self.dtype)(cell_state))
 
         return output, cell_state
 

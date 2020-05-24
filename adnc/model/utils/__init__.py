@@ -14,7 +14,7 @@
 # ==============================================================================
 from .early_stop import EarlyStop
 from .holistic_multi_rnn_cell import HolisticMultiRNNCell
-from .normalization import layer_norm
+from .normalization import layer_norm, LayerNorm
 from .initialization import unit_simplex_initialization
 from .np_functions import softmax, weighted_softmax
 from .tf_functions import oneplus, get_activation

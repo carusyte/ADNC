@@ -17,7 +17,7 @@ import tensorflow as tf
 
 def layer_norm(weights, name, dtype=tf.float32):
     _eps = 1e-6
-
+    print("layer norm weights: {}".format(weights))
     with tf.name_scope("ln_{}".format(name)):
         scale = tf.Variable(
             name='scale',

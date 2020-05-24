@@ -24,10 +24,10 @@ def layer_norm(weights, name, dtype=tf.float32):
     with tf.name_scope("ln_{}".format(name)):
         scale = tf.Variable(
             name='scale',
-            initial_value=lambda : tf.ones(shape=[weights.get_shape()[-1]]),
+            initial_value=lambda : tf.ones(shape=[weights.get_shape()[1]]),
             dtype=dtype)
         beta = tf.Variable(name='beta',
-                           initial_value=lambda : tf.zeros(shape=[weights.get_shape()[-1]]),
+                           initial_value=lambda : tf.zeros(shape=[weights.get_shape()[1]]),
                            dtype=dtype)
 
     mean, var = tf.nn.moments(x=weights, axes=[1], keepdims=True)
